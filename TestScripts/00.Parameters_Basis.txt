@@ -1,0 +1,79 @@
+Main Directory=Outputs/
+######Simulation Parameters######
+Random Seed=12345
+
+Number Simulations=30
+Iterations=100
+Iterations Outgrowth=0
+Log Interval=1
+#Log Sample Genomes=1,5,10,15,20
+Log Sample Genomes=-100
+######
+
+
+######Environment Parameters######
+World Size=100
+#Bounded (physical barriers at the border) OR Toroidal (continuous world)
+World Type=Toroidal
+
+#Liquid OR Solid (equivalent to distance 1 in the grid) OR Semi-Solid (equivalent to distance 3 in the grid)
+Environmental Diffusion=Liquid
+
+Antibiotic Degradation Lambda RIF=0.0001
+Antibiotic Degradation Lambda STR=0.0001
+Antibiotic Degradation Lambda QUIN=0.0001
+
+Free Phage Degradation Lambda=0.015
+eDNA Degradation Lambda=0.05
+
+Max Antibiotic Concentration RIF=30
+Max Antibiotic Concentration STR=30
+Max Antibiotic Concentration QUIN=30
+Antibiotic Times RIF=15
+Antibiotic Times STR=-100
+Antibiotic Times QUIN=-100
+Antibiotic Exposure Structured Environments=Homogeneous
+######
+
+
+
+######Bacteria General Parameters######
+Number Genes=30
+Minimum Gene Size=30
+Maximum Gene Size=50
+
+Gene Loss Probability=0
+
+Death Curve (A, B, M)=0, 0.08, 27
+
+Possible Receptors=2
+Resistance Phage Receptor Mutation Probability=0.1
+Resistance Phage CRISPR Mutation Probability=0
+Resistance Phage Cost=0.1
+######
+
+
+######ARG Parameters######
+ARG Mutation Probability=0
+ARG Rif Cost=0.1
+ARG Str Cost=0.1
+ARG Quin Cost=0.1
+######
+
+
+######Phages and transduction######
+Phage Carrying Capacity=500
+Abortive Infection Probability=0
+Phage Receptor Mutation Probability=0
+Phage CRISPR Mutation Probability=0
+Phage Host Range Mutation Probability=0
+Phage Recombination Probability=0.1
+Burst Probability=0.9
+
+Curing Probability=0
+Specialized Transduction Genomic Distance=1
+Infection Distance=2
+
+Failed Phage Infection DNA Prophage Integration=0
+Failed Phage Infection DNA Chromosome Integration=0.1
+######

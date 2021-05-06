@@ -1,0 +1,19 @@
+#BacteriaName	Color	DNAIdentifier	InitialFreq	GrowthRate	ResistantAntib	ResistantPhage	Prophage
+Bac_Resistant	red	B	0.3	0.2	Rif	NA	NA
+Bac_Sensitive	green	A	0.3	0.2	NA	NA	NA
+#
+#PhageName	ColorGenome	PhageType	Receptor BurstSize	DNAIdentifier	InTheEnvironment	LysogenyAlpha	LysogenyKappa	InductionAlpha	InductionKappa GenTransductionProb SpecTransductionProb MaxCargoSize
+PhageA	orange	Temperate	1	20	Z	0	1000	0.05	100000	0.4	0.01	0	10
+PhageB	blue	Virulent	0	20	Y	0	10E200	0.05	100000	0.4	0.01	0	10
+#
+#HostMatrix
+	Bac_Resistant	Bac_Sensitive
+PhageA	0.01	0.01
+PhageB	0.01	0.01
+#
+#SuperinfectionProbability
+	PhageA	PhageA_Defective	PhageB	PhageB_Defective
+PhageA	1	0	0	0
+PhageA_Defective	0	0	0	0
+PhageB	0	0	1	0
+PhageB_Defective	0	0	0	0

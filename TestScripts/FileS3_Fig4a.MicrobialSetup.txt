@@ -1,0 +1,15 @@
+#BacteriaName	Color	DNAIdentifier	InitialFreq	GrowthRate	ResistantAntib	ResistantPhage	Prophage
+Coli_Prophage	green	A	0.1	0.7	NA	NA	(PhTemp,10)
+Coli	red	B	0.9	0.7	NA	NA	NA
+#
+#PhageName	ColorGenome	PhageType	Receptor BurstSize	DNAIdentifier	InTheEnvironment	LysogenyAlpha	LysogenyKappa	InductionAlpha	InductionKappa GenTransductionProb SpecTransductionProb MaxCargoSize
+PhTemp	yellow	Temperate	0	10	G	0	50	0.1	1000	0.15	0	0	10
+#
+#HostMatrix
+	Coli_Prophage	Coli
+PhTemp	0.1	0.1
+#
+#SuperinfectionProbability
+	PhTemp	PhTemp_Defective
+PhTemp	1	0
+PhTemp_Defective	0	0
