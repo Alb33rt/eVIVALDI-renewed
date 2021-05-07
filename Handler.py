@@ -1,12 +1,14 @@
+
+import Organism, ParseSpecies, Parameters
+import Stats
+import os, string, random, pprint
+import numpy as np
+
+from Environment import World
+from Parameters import model_parameters as param
 from Visual import WorldPainter, PrintGenomes
 from Environment import World
-import Organism, ParseSpecies
-import Stats
-import os, string, random
-import numpy as np
 from copy import copy, deepcopy
-import pprint
-
 
 ##Check input parameters
 import argparse
@@ -19,12 +21,9 @@ parser.add_argument('--visualize', action='store_true', help='Include this flag 
    
 args = parser.parse_args()
   
-print("Parameter file:", args.paramfile)
-print("Setup file:", args.setupfile)
+print("Parameter file:" + args.paramfile)
+print("Setup file:" + args.setupfile)
   
-
-import Parameters
-from Parameters import model_parameters as param
 Parameters.LoadParameters(args.paramfile)
 
 
@@ -35,29 +34,40 @@ if param["Random Seed"]!=None:
 
 
 #Create subdirectories that hold the printed structures
-if not os.path.exists(param["Main Directory"]+"/Genomes/"):print("Directory missing ("+param["Main Directory"]+"/Genomes/"+"), creating..."); os.makedirs(param["Main Directory"]+"/Genomes/")
-if not os.path.exists(param["Main Directory"]+"/Bacteria/"):print("Directory missing ("+param["Main Directory"]+"/Bacteria/"+"), creating...");os.makedirs(param["Main Directory"]+"/Bacteria/")
-if not os.path.exists(param["Main Directory"]+"/World/"):print("Directory missing ("+param["Main Directory"]+"/World/"+"), creating...");os.makedirs(param["Main Directory"]+"/World/")
-if not os.path.exists(param["Main Directory"]+"/Joined/"):print("Directory missing ("+param["Main Directory"]+"/Joined/"+"), creating...");os.makedirs(param["Main Directory"]+"/Joined/")
-if not os.path.exists(param["Main Directory"]+"/PlotDynamics/"):print("Directory missing ("+param["Main Directory"]+"/PlotDynamics/"+"), creating...");os.makedirs(param["Main Directory"]+"/PlotDynamics/")
-
+if not os.path.exists(param["Main Directory"]+"/Genomes/"):
+    print("Directory missing ("+param["Main Directory"]+"/Genomes/"+"), creating...")
+    os.makedirs(param["Main Directory"]+"/Genomes/")
+if not os.path.exists(param["Main Directory"]+"/Bacteria/"):
+    print("Directory missing ("+param["Main Directory"]+"/Bacteria/"+"), creating...")
+    os.makedirs(param["Main Directory"]+"/Bacteria/")
+if not os.path.exists(param["Main Directory"]+"/World/"):
+    print("Directory missing ("+param["Main Directory"]+"/World/"+"), creating...")
+    os.makedirs(param["Main Directory"]+"/World/")
+if not os.path.exists(param["Main Directory"]+"/Joined/")
+    print("Directory missing ("+param["Main Directory"]+"/Joined/"+"), creating...")
+    os.makedirs(param["Main Directory"]+"/Joined/")
+if not os.path.exists(param["Main Directory"]+"/PlotDynamics/"):
+    print("Directory missing ("+param["Main Directory"]+"/PlotDynamics/"+"), creating...")
+    os.makedirs(param["Main Directory"]+"/PlotDynamics/")
 
 #Accessory function - Roullette wheel selection
 def WeightedReproductionChoice(bacteria_list):
     
     def weighted_choice(choices):
         total = sum(w for c, w in choices)
-        if total==0: return None
+        if total==0: 
+            return None
         r = random.uniform(0, total)
         upto = 0
         for c, w in choices:
-            if upto + w >= r:return (c, w)
+            if upto + w >= r:
+                return (c, w)
             upto += w
             
     candidates=[(b, b.AssertCandidacy()) for b in bacteria_list]    
     candidates = filter(lambda x: x[1] != None, candidates)
     
-    result=weighted_choice(candidates)
+    result = weighted_choice(candidates)
     
     if (result!=None) and (len(result[0].phages)>0):
         for p in result[0].phages:
@@ -65,27 +75,31 @@ def WeightedReproductionChoice(bacteria_list):
                 print("You should not be here")
                 exit()
     
-    if result==None: return None
-    else: return result[0]
-
+    if result==None: 
+        return None
+    else: 
+        return result[0]
 
 #Accessory function - Logic check for bacteria survival
 def IsDEAD(bacteria):
-    if bacteria.location==None:return False
-    else:return True
-
+    if bacteria.location==None:
+        return False
+    else:
+        return True
 
 def AddPhages(future_phage, world):                
     for pos in future_phage:
         phg=future_phage[pos]
         print("Adding phage", phg["Type"], phg["Family"])
-        world.world[pos].AddFreePhage(phage_type=copy(phg["Type"]), 
-                                          family=copy(phg["Family"]), 
-                                          donor_genome=None, 
-                                          cargo=copy(phg["Cargo"]), 
-                                          crispr_sequence=copy(phg["crispr_seq"]),
-                                          receptor=copy(phg["Receptor"]), 
-                                          maxcargo=copy(phg["MaxCargoSize"]))
+        world.world[pos].AddFreePhage(
+            phage_type=copy(phg["Type"]), 
+            family=copy(phg["Family"]), 
+            donor_genome=None, 
+            cargo=copy(phg["Cargo"]), 
+            crispr_sequence=copy(phg["crispr_seq"]),
+            receptor=copy(phg["Receptor"]), 
+            maxcargo=copy(phg["MaxCargoSize"])
+        )
 
 sims=param["Number Simulations"]
 
@@ -101,7 +115,9 @@ for sim in range(sims):
     def DefineGenome(block):
         
         #Define main DNA
-        genome_type=[(random.choice([block, block, block, block, "N"]), int(random.uniform(param["Minimum Gene Size"],param["Maximum Gene Size"])), "Core") for _ in range(param["Number Genes"])]
+        genome_type=[(random.choice([block, block, block, block, "N"])
+        int(random.uniform(param["Minimum Gene Size"],
+        param["Maximum Gene Size"])), "Core") for _ in range(param["Number Genes"])]
                 
         #Define antibiotic resistance genes (x3)
         for resistance_allele in ["Rif", "Str", "Quin"]:
@@ -133,24 +149,29 @@ for sim in range(sims):
                 
         if "ARG" in p["Name"]:
             ar_type=p["Name"].split("ARG_")[-1]
-            initial_phages.append({"Type":p["Type"],
-                                  "Position":None, 
-                                  "Family":p["Name"], "crispr_seq":''.join(random.choice(string.ascii_lowercase) for _ in range(10)), 
-                                  "Cargo":[(p["DNAIdentifier"], 10, 'Mobile:Ph'),
-                                         ('A:AR_'+ar_type, 9, 'Core', 'Resistant', 'Mobile:Ph')],
-                                   "Receptor":p["Receptor"],
-                                   "MaxCargoSize":p["MaxCargoSize"], 
-                                   "Time":10})
+            initial_phages.append({
+                "Type": p["Type"],
+                "Position": None, 
+                "Family": p["Name"],
+                "crispr_seq": ''.join(random.choice(string.ascii_lowercase) for _ in range(10)), 
+                "Cargo":[ ( p["DNAIdentifier"] , 10, 'Mobile:Ph'),
+                        ('A:AR_'+ar_type, 9, 'Core', 'Resistant', 'Mobile:Ph')],
+                "Receptor": p["Receptor"],
+                "MaxCargoSize": p["MaxCargoSize"], 
+                "Time":10
+            })
 
         else:
-            initial_phages.append({"Type":p["Type"],
-                                  "Position":None, 
-                                  "Family":p["Name"], "crispr_seq":''.join(random.choice(string.ascii_lowercase) for _ in range(10)), 
-                                  "Cargo":[(p["DNAIdentifier"], 10, 'Mobile:Ph'),
-                                         (p["DNAIdentifier"], 20, 'Mobile:Ph')],
-                                   "Receptor":p["Receptor"],
-                                   "MaxCargoSize":p["MaxCargoSize"], 
-                                   "Time":0})
+            initial_phages.append({
+                "Type": p["Type"],
+                "Position": None, 
+                "Family": p["Name"], "crispr_seq":''.join(random.choice(string.ascii_lowercase) for _ in range(10)), 
+                "Cargo":[(p["DNAIdentifier"], 10, 'Mobile:Ph'),
+                        (p["DNAIdentifier"], 20, 'Mobile:Ph')],
+                "Receptor": p["Receptor"],
+                "MaxCargoSize": p["MaxCargoSize"], 
+                "Time": 0,
+            })
         
         param["IndividualPhageParameters"]["Burst Size"][p["Name"]]=p["BurstSize"]
         param["IndividualPhageParameters"]["Lysogeny Alpha"][p["Name"]]=p["Lysogeny Alpha"]
@@ -179,7 +200,9 @@ for sim in range(sims):
     param["Superinfection"]=setup_superinfection
 
     ##Setup bacteria
-    genome_types=[];colors_used=[]; bacs=[]
+    genome_types=[]
+    colors_used=[]
+    bacs=[]
     
     param["Bacteria Species"]={}
     param["IndividualBacteriaParameters"]={}
@@ -187,7 +210,11 @@ for sim in range(sims):
     
         
     for b in setup_bacs:
-        if not(b["Color"] in colors_used): colors_used.append(b["Color"]); genome_types.append((DefineGenome(b["DNAIdentifier"]), b["Color"])); param["Bacteria Species"][b["Name"]]=b["Color"]; genomes_colors_map[b["DNAIdentifier"]]=(b["Color"], "Bacteria")
+        if not(b["Color"] in colors_used): 
+            colors_used.append(b["Color"])
+            genome_types.append((DefineGenome(b["DNAIdentifier"]), b["Color"]))
+            param["Bacteria Species"][b["Name"]]=b["Color"]
+            genomes_colors_map[b["DNAIdentifier"]]=(b["Color"], "Bacteria")
         
         genome_to_use=None
         for gen in genome_types:
@@ -203,25 +230,29 @@ for sim in range(sims):
             if b["AntRes"]!= "NA":
                 for res in b["AntRes"]:
                     for idx, gene in enumerate(new_bacteria.genome):
-                        if "AR_"+res in gene[0]:new_bacteria.genome[idx]=(gene[0], gene[1], gene[2], "Resistant"); new_bacteria.resistances[gene[0].split(":")[1]]=True
+                        if "AR_"+res in gene[0]:
+                            new_bacteria.genome[idx]=(gene[0], gene[1], gene[2], "Resistant")
+                        new_bacteria.resistances[gene[0].split(":")[1]] = True
             
-            if b["PhageRes"][0]!="NA": new_bacteria.phage_receptor_resistances=[int(recept) for recept in b["PhageRes"]]           
+            if b["PhageRes"][0]!="NA": 
+                new_bacteria.phage_receptor_resistances=[int(recept) for recept in b["PhageRes"]]           
       
             if b["Prophage"]!=None:                
                 for phg in b["Prophage"]:
-                    for phg_template in initial_phages:                                                
+                    for phg_template in initial_phages:                                
                         if phg_template["Family"]==phg[0]:    
                             #print arg_pos
-                            
-                            new_bacteria.phages.append({"Type":copy(phg_template["Type"]), 
-                                                    "Position":copy(phg[1]), 
-                                                    "Family":copy(phg_template["Family"]),
-                                                    "crispr_seq":copy(phg_template["crispr_seq"]),
-                                                    "Cargo":copy(phg_template["Cargo"]),
-                                                    "Receptor":copy(phg_template["Receptor"]),
-                                                    "MaxCargoSize":copy(phg_template["MaxCargoSize"]),
-                                                    "Time":copy(phg_template["Time"])})
-                            new_bacteria.genome.insert(phg[1], new_bacteria.phages[-1]) 
+                            new_bacteria.phages.append({
+                                "Type": copy(phg_template["Type"]), 
+                            "Position": copy(phg[1]), 
+                            "Family": copy(phg_template["Family"]),
+                            "crispr_seq": copy(phg_template["crispr_seq"]),
+                            "Cargo": copy(phg_template["Cargo"]),
+                            "Receptor": copy(phg_template["Receptor"]),
+                            "MaxCargoSize": copy(phg_template["MaxCargoSize"]),
+                            "Time": copy(phg_template["Time"])})
+    new_bacteria.genome.insert(phg[1], new_bacteria.phages[-1]
+    ) 
                                                         
                             for gene in phg_template["Cargo"]:
                                 #Check if ARG comes along, add to resistance profile...                
@@ -237,9 +268,16 @@ for sim in range(sims):
     print("Positioning bacteria...")
     print(len(bacs))
     all_vacancies=deepcopy(w.Get_All_Free_Spaces()) #Gather empty spots (deepcopy, because we are changing it)
-    random.shuffle(all_vacancies);random.shuffle(bacs) #Shuffle everything (places, bacteria)
-    for idx in range(len(bacs)):bacs[idx].Set_Location(w.world[all_vacancies[idx]], set_un=False) #Assign each bacteria to a place (sequential, now that everything is shuffled)    
-    w.Set_Many_Unavailable(all_vacancies[0:len(bacs)]) #Mark assigned places as unavailable (the first part of the location list, since we assigned them sequentially)
+    random.shuffle(all_vacancies)
+    random.shuffle(bacs) 
+    #Shuffle everything (places, bacteria)
+
+    for idx in range(len(bacs)):bacs[idx].Set_Location(w.world[all_vacancies[idx]], set_un=False) 
+    #Assign each bacteria to a place (sequential, now that everything is shuffled) 
+
+    w.Set_Many_Unavailable(all_vacancies[0:len(bacs)]) 
+    #Mark assigned places as unavailable (the first part of the location list, since we assigned them sequentially)
+
     #w.Set_All_Unavailable() #Comment previous line and uncomment this if all lattice is filled (faster like this)
     
     #Fifth, and finally the life cycle
@@ -247,7 +285,10 @@ for sim in range(sims):
     iterations_outgrowth=param["Iterations Outgrowth"]
     
     #Real time plots    
-    if args.visualize: import VisualStats; VisualStats.LaunchPlot(); VisualStats.ResetPlots()
+    if args.visualize: 
+        import VisualStats
+        VisualStats.LaunchPlot()
+        VisualStats.ResetPlots()
     
     phage_diversity={}    
     bac_diversity={}
@@ -275,22 +316,28 @@ for sim in range(sims):
                                    
         #Apply Antibiotics - Do this before visual plots to see the dynamics (a lot will happen after antibiotics are applied)
         ant_to_apply=[]
-        if iteration in param["Antibiotic Times RIF"]: ant_to_apply.append("RIF")
-        if iteration in param["Antibiotic Times STR"]: ant_to_apply.append("STR")
-        if iteration in param["Antibiotic Times QUIN"]: ant_to_apply.append("QUIN")
+        if iteration in param["Antibiotic Times RIF"]: 
+            ant_to_apply.append("RIF")
+        if iteration in param["Antibiotic Times STR"]: 
+            ant_to_apply.append("STR")
+        if iteration in param["Antibiotic Times QUIN"]: 
+            ant_to_apply.append("QUIN")
                 
         #if iteration in param["Antibiotic Times"]:
         for ant in ant_to_apply:
             
             #Skip if there are no antibiotics
-            if param["Max Antibiotic Concentration "+ant]==0: continue
+            if param["Max Antibiotic Concentration "+ant]==0: 
+                continue
             
             #Uniformly, if environment is liquid
             if (param["Environmental Diffusion"]=="Liquid") or (param["Antibiotic Exposure Structured Environments"]=="Homogeneous"):                        
                 for loc_x in range(0, param["World Size"]):
                     #for loc_y in range(0, param["World Size"]):w.world[loc_x, loc_y].AddAntibiotic("RIF",param["Max Antibiotic Concentration"])
-                    for loc_y in range(0, param["World Size"]):w.world[loc_x, loc_y].AddAntibiotic(ant,param["Max Antibiotic Concentration "+ant])  
-            else: #Hetereogeneously in the environment, otherwise
+                    for loc_y in range(0, param["World Size"]):
+                        w.world[loc_x, loc_y].AddAntibiotic(ant,param["Max Antibiotic Concentration "+ant])  
+            else: 
+                #Hetereogeneously in the environment, otherwise
                                            
                 #Choose random spots to apply drug
                 spread=2
@@ -305,10 +352,14 @@ for sim in range(sims):
                     
         print("(SIM "+str(sim)+"_"+args.id+") Iteration "+ str(iteration)+", with "+str(len(bacs))+" bacteria and "+str(w.GetAllFreePhages())+" free phage...")
         
-        if args.visualize: vanGogh.Paint(w.world, iteration)
+        if args.visualize: 
+            vanGogh.Paint(w.world, iteration)
         
         #Real time plots
-        if args.visualize: sts=Stats.GetStats(bacs, w);extra_sts=Stats.GetExtraStats(bacs, w);VisualStats.UpdateStats(iteration, sim, sts, extra_sts, print_plots=True)
+        if args.visualize: 
+            sts=Stats.GetStats(bacs, w)
+        extra_sts=Stats.GetExtraStats(bacs, w)
+        VisualStats.UpdateStats(iteration, sim, sts, extra_sts, print_plots=True)
             
         print("\tShuffling bacteria access...")
         random.shuffle(bacs) #Randomize order of assessing each cell
@@ -317,17 +368,20 @@ for sim in range(sims):
         print("\tDeath...")
         empty_spots=[] #Will hold the locations of dead bacteria
         for b in bacs:
-            if random.random()<b.Get_Death_Probability(): empty_spots.append(b.Death())
+            if random.random()<b.Get_Death_Probability(): 
+                empty_spots.append(b.Death())
         
         print("\tRemoving "+str(len(empty_spots))+" dead cells...")
         bacs=filter(IsDEAD, bacs)
         w.Set_Many_Available(empty_spots)
 
         print("\tEnvironmental phage infection...")
-        for b in bacs: b.EnvironmentalInfection()
+        for b in bacs: 
+            b.EnvironmentalInfection()
         
         #Reproduction/movement into newly open spaces]
-        for b in bacs:b.just_reproduced=False
+        for b in bacs:
+            b.just_reproduced = False
         
         print("\tReproducing and repopulating...")
         new_bacteria_list=[]
@@ -350,7 +404,8 @@ for sim in range(sims):
 
         
         for idx, new_b in enumerate(new_bacteria_list):
-            new_b[0].Set_Location(w.world[new_b[1]], set_un=False);bacs.append(new_b[0])
+            new_b[0].Set_Location(w.world[new_b[1]], set_un=False)
+            bacs.append(new_b[0])
         w.Set_Many_Unavailable(used_locations_list)
         
         #Disperse bacteria if environment is well-mixed
@@ -359,13 +414,18 @@ for sim in range(sims):
             w.Set_All_Available()
             if len(bacs)>0:
                 all_vacancies=deepcopy(w.Get_All_Free_Spaces())
-                random.shuffle(all_vacancies);random.shuffle(bacs)
+                random.shuffle(all_vacancies)
+                random.shuffle(bacs)
                 for idx, bac in enumerate(bacs): 
                     bac.Leave_Current_Location(set_a=False)
                     bac.Set_Location(w.world[all_vacancies[idx]], set_un=False)        
-                if idx<len(all_vacancies)-1:w.Set_Many_Unavailable(all_vacancies[0:idx+1])
-                else: w.Set_All_Unavailable()
+                if idx<len(all_vacancies)-1:
+                    w.Set_Many_Unavailable(all_vacancies[0:idx+1])
+                else: 
+                    w.Set_All_Unavailable()
         
         #Degrade antibiotics, phages...
         print("\tEnvironmental changes...")
         w.UpdateLocations()
+
+        # This file has been completely translated.

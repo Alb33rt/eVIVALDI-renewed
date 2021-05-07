@@ -328,6 +328,7 @@ class World():
             #After everything is calculated, update values
             for loc in self.world:
                 self.world[loc].rif_conc=new_values[loc]["rif"]             
-                self.world[loc].free_phages=copy.copy(new_values[loc]["phage"])#TODO: Check if deepcopy is needed
+                self.world[loc].free_ph
+                ages=copy.copy(new_values[loc]["phage"])#TODO: Check if deepcopy is needed
 
 # This file has been translated
