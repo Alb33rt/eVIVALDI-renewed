@@ -1,4 +1,4 @@
-import random, math, itertools, copy, numpy
+import random, math, itertools, copy, numpy, string
 from Parameters import model_parameters as param
 import string
 
@@ -36,7 +36,8 @@ class Bacteria():
         
     def Leave_Current_Location(self, set_a=True):
         self.location.occupants.remove(self)
-        if set_a: self.location.Add_Available()
+        if set_a: 
+            self.location.Add_Available()
         self.location=None
     
     def Get_Death_Probability(self):
@@ -55,7 +56,8 @@ class Bacteria():
         death_rate_modifiers+=a+((1-a)/(1+math.exp(-b*(ant_concentration-m))))
         
         #Upon phage excision, death is certain        
-        if self.InnerPhageLifeCycle(): death_rate_modifiers+=1
+        if self.InnerPhageLifeCycle(): 
+            death_rate_modifiers+=1
         
         return death_rate_modifiers
     
@@ -70,30 +72,40 @@ class Bacteria():
     
     def AssertCandidacy(self):        
         base_prob_reproduction=param["IndividualBacteriaParameters"]["Basal Reproduction Probability"][self.name]
-        
-
+    
         #Add a reproductive cost for each ARG
         cumulative_cost=base_prob_reproduction
         for gene in self.genome:
             if isinstance(gene, tuple): #If it is a gene originally in the bacteria
-                if (("AR_Rif" in gene[0]) and (gene[3]=="Resistant")):cumulative_cost*=(1-param["ARG Rif Cost"])
-                if (("AR_Str" in gene[0]) and (gene[3]=="Resistant")):cumulative_cost*=(1-param["ARG Str Cost"])
-                if (("AR_Quin" in gene[0]) and (gene[3]=="Resistant")):cumulative_cost*=(1-param["ARG Quin Cost"])
-            if isinstance(gene, dict): pass #TODO: It is a mobile element, should it also count as a cost
+                if (("AR_Rif" in gene[0]) and (gene[3]=="Resistant")):
+                    cumulative_cost*=(1-param["ARG Rif Cost"])
+                if (("AR_Str" in gene[0]) and (gene[3]=="Resistant")):
+                    cumulative_cost*=(1-param["ARG Str Cost"])
+                if (("AR_Quin" in gene[0]) and (gene[3]=="Resistant")):
+                    cumulative_cost*=(1-param["ARG Quin Cost"])
+            if isinstance(gene, dict): 
+                pass 
+                #It is a mobile element, should it also count as a cost
         
         #Add reproductive cost for changes in the receptor conferring phage resistance
-        #TODO: decide if it should depend on the number of receptor resistances
-        if len(self.phage_receptor_resistances)>0:cumulative_cost*=(1-param["Resistance Phage Cost"])        
+        # decide if it should depend on the number of receptor resistances
+        if len(self.phage_receptor_resistances)>0:
+            cumulative_cost*=(1-param["Resistance Phage Cost"])        
         
         #So that it does not go below zero (if everyone is zero, nobody is chosen)
         prob_reproduction=max(0.000001, cumulative_cost)
         
-        if self.just_reproduced==True: prob_reproduction=0 #Added v4: Only case when reproduction is zero is when the organism has already reproduced
+        if self.just_reproduced==True: 
+            prob_reproduction=0 #Added v4: Only case when reproduction is zero is when the organism has already reproduced
         for p in self.phages: 
-            if (p["Type"]=="Virulent") or (p["Type"]=="Induced_Temperate"): prob_reproduction=0 #Added v5: Another case when reproduction is zero: there is a lytic phage within the cell
+            if (p["Type"]=="Virulent") or (p["Type"]=="Induced_Temperate"): 
+                prob_reproduction=0 
+                #Added v5: Another case when reproduction is zero: there is a lytic phage within the cell
         
-        if random.random()<prob_reproduction: return prob_reproduction
-        else: return None        
+        if random.random()<prob_reproduction: 
+            return prob_reproduction
+        else: 
+            return None        
         
     def Mutation(self):
 
@@ -104,19 +116,31 @@ class Bacteria():
                     #ARG mutations
                     if (("AR_Rif" in cargo_gene[0]) or ("AR_Str" in cargo_gene[0]) or ("AR_Quin" in cargo_gene[0])): 
                         if random.random()<param["ARG Mutation Probability"]:
-                            if cargo_gene[3]=="Sensitive": self.genome[idx]["Cargo"][idx_cargo]=(cargo_gene[0], cargo_gene[1], cargo_gene[2], "Resistant"); self.resistances[cargo_gene[0].split(":")[1]]=True #Acquisition of resistance
-                            else: self.genome[idx]["Cargo"][idx_cargo]=(cargo_gene[0], cargo_gene[1], cargo_gene[2], "Sensitive"); self.resistances[cargo_gene[0].split(":")[1]]=False #Loss of resistance
+                            if cargo_gene[3]=="Sensitive": 
+                                self.genome[idx]["Cargo"][idx_cargo]=(cargo_gene[0], cargo_gene[1], cargo_gene[2], "Resistant")
+                                self.resistances[cargo_gene[0].split(":")[1]]=True #Acquisition of resistance
+                            else: 
+                                self.genome[idx]["Cargo"][idx_cargo]=(cargo_gene[0], cargo_gene[1], cargo_gene[2], "Sensitive")
+                                self.resistances[cargo_gene[0].split(":")[1]]=False #Loss of resistance
                                             
                     #Everything else
-                    else: pass #TODO: Define mutations in non-ARG genes                        
+                    else: 
+                        pass 
+                        # Define mutations in non-ARG genes                        
             else:
                 #ARG mutations            
                 if (("AR_Rif" in gene[0]) or ("AR_Str" in gene[0]) or ("AR_Quin" in gene[0])) and (random.random()<param["ARG Mutation Probability"]):
-                    if gene[3]=="Sensitive": self.genome[idx]=(gene[0], gene[1], gene[2], "Resistant"); self.resistances[gene[0].split(":")[1]]=True #Acquisition of resistance
-                    else: self.genome[idx]=(gene[0], gene[1], gene[2], "Sensitive"); self.resistances[gene[0].split(":")[1]]=False #Loss of resistance
+                    if gene[3]=="Sensitive": 
+                        self.genome[idx]=(gene[0], gene[1], gene[2], "Resistant")
+                        self.resistances[gene[0].split(":")[1]]=True #Acquisition of resistance
+                    else: 
+                        self.genome[idx]=(gene[0], gene[1], gene[2], "Sensitive")
+                        self.resistances[gene[0].split(":")[1]]=False #Loss of resistance
                                     
                 #Everything else
-                else: pass #TODO: Define mutations in non-ARG genes
+                else: 
+                    pass 
+                    # Define mutations in non-ARG genes
                 
         if ((random.random()<param["Resistance Phage Receptor Mutation Probability"]) and (len(self.phage_receptor_resistances)<param["Possible Receptors"])):
 
@@ -128,7 +152,7 @@ class Bacteria():
             if len(all_possible_receptors - existing_receptors)!=0:            
                 self.phage_receptor_resistances.append(random.choice(list(all_possible_receptors - existing_receptors)))
                 
-            #TODO: Add in genome? Also subject to gene loss                            
+            # Add in genome? Also subject to gene loss                            
         
         #Gene loss
         def GeneLoss():            
@@ -137,12 +161,15 @@ class Bacteria():
                 
             if isinstance(gene, dict): #mobile genes, good to delete
 
-                if len(gene["Cargo"])==1: return False #Always keeps at least one cargo gene!!!
-                else: save_gene=gene["Cargo"][0]
+                if len(gene["Cargo"])==1: 
+                    return False #Always keeps at least one cargo gene!!!
+                else: 
+                    save_gene=gene["Cargo"][0]
                                 
                 gene["Cargo"][:]=[cargo_gene for cargo_gene in gene["Cargo"] if random.random()>param["Gene Loss Probability"]]
                             
-                if len(gene["Cargo"])==0: gene["Cargo"][:]=[save_gene] #Always keeps at least one cargo gene!!! (mroe than one can be deleted in the line above if gene loss probability is high enough...)
+                if len(gene["Cargo"])==0: 
+                    gene["Cargo"][:]=[save_gene] #Always keeps at least one cargo gene!!! (mroe than one can be deleted in the line above if gene loss probability is high enough...)
                 
                 return False #Always returns false because the mobile element is still there (at least the "structure")
 #             else:
@@ -167,31 +194,39 @@ class Bacteria():
             arg_res_found=False
             for gene in self.genome:                
                 if isinstance(gene, tuple): #If it is a gene originally in the bacteria
-                    if (("AR_Rif" in gene[0]) and (gene[3]=="Resistant")): arg_res_found=True; break
+                    if (("AR_Rif" in gene[0]) and (gene[3]=="Resistant")): 
+                        arg_res_found=True
+                        break
                 if isinstance(gene, dict):
                     for sub_gene in gene["Cargo"]: #If it is a gene within a mobile element
-                        if (("AR_Rif" in sub_gene[0]) and (sub_gene[3]=="Resistant")): arg_res_found=True; break
+                        if (("AR_Rif" in sub_gene[0]) and (sub_gene[3]=="Resistant")): 
+                            arg_res_found=True
+                            break
                         
             if not(arg_res_found):self.resistances["AR_Rif"]=False
                 
                             
 
     def Reproduce(self):
-        
         #Creates new offspring. Let's leave the genome empty for now
         offspring=Bacteria(name=self.name, genome=None, color=self.color)
         
         #Let's add the "accessory" mobile elements
-        offspring.phages=[copy.deepcopy(ph) for ph in self.phages] #TODO: Try to make this faster...
+        offspring.phages=[copy.deepcopy(ph) for ph in self.phages] 
+        #Try to make this faster...
         
         #Let's create the genome with the correct references for mobile elements
         new_genome=[]
         for gene in self.genome:
-            if isinstance(gene, dict):pass #Add only the other genes for now                
-            else: new_genome.append(gene) #"normal" gene
+            if isinstance(gene, dict):
+                pass 
+                #Add only the other genes for now                
+            else: 
+                new_genome.append(gene) #"normal" gene
         
         #Finally insert the mobile elements in the correct positions
-        for phg in offspring.phages:new_genome.insert(phg["Position"], phg)
+        for phg in offspring.phages:
+            new_genome.insert(phg["Position"], phg)
         
         #And set the new genome to the offspring
         offspring.genome=new_genome
@@ -219,16 +254,19 @@ class Bacteria():
         deposit_locations.append(self.location)
         
         for _ in range(eDNA_pieces):
-            if random.random()<eDNA_AR_prob: random.choice(deposit_locations).eDNA.append(("AR", self.genome))
-            else: random.choice(deposit_locations).eDNA.append(("Trash", self.genome))
+            if random.random()<eDNA_AR_prob: 
+                random.choice(deposit_locations).eDNA.append(("AR", self.genome))
+            else: 
+                random.choice(deposit_locations).eDNA.append(("Trash", self.genome))
             
     def Transformation(self):
         print("Alpha function, not usable")
-        #TODO: Need to decide how to to this. Get one at random or have the same probability for each available DNA piece
+        #Need to decide how to to this. Get one at random or have the same probability for each available DNA piece
         transf_prob=0.01
         eDNA_trans_distance=2
         
-        if random.random()>transf_prob: return 
+        if random.random()>transf_prob: 
+            return 
         
         import_locations=self.location.Get_Reachable(eDNA_trans_distance, desired_type="LocationObj")
         import_locations.append(self.location)
@@ -237,15 +275,21 @@ class Bacteria():
             if len(loc.eDNA)>0: 
                 if random.random()<transf_prob: 
                     imported_dna=random.choice(loc.eDNA)
-                    if imported_dna[0]=="AR": self.ar_locus[0]=1; self.is_ARtransformed=True
-                    else: pass #randomly insert in other genes
-                    loc.eDNA.remove(imported_dna) #remove imported DNA from environment
+                    if imported_dna[0]=="AR": 
+                        self.ar_locus[0]=1
+                        self.is_ARtransformed=True
+                    else: 
+                        pass 
+                        #randomly insert in other genes
+                    loc.eDNA.remove(imported_dna) 
+                    #remove imported DNA from environment
                     
     def GetPhageARG(self):
         ARG_inPhage=[]
         for phg in self.phages:
             for gene in phg["Cargo"]: 
-                if "AR" in gene[0]: ARG_inPhage.append(gene)
+                if "AR" in gene[0]: 
+                    ARG_inPhage.append(gene)
         return ARG_inPhage
     
     
@@ -272,8 +316,11 @@ class Bacteria():
                         break
                 
                 if to_remove!=-1: 
-                    del location.free_phages[to_remove] #TODO: Should the phage be removed if infection is unsuccessful?
-                    break #After infection, stop looking #TODO: Does this make sense? MOI?
+                    del location.free_phages[to_remove] 
+                    #Should the phage be removed if infection is unsuccessful?
+                    break 
+                    #After infection, stop looking 
+                    #Does this make sense? MOI?
                       
     
     def IntegratePhageDNA(self, infecting_phage_cargo):
@@ -295,10 +342,12 @@ class Bacteria():
                     resident_phage["Cargo"][insertion_pos]=resident_phage["Cargo"][insertion_pos][0:-1]+(resident_phage["Cargo"][insertion_pos][-1]+"_rec",)                    
                     
                     #Becomes defective if too much DNA within phage
-                    if resident_phage["Cargo"]>resident_phage["MaxCargoSize"]: resident_phage["Type"]="Defective"
+                    if resident_phage["Cargo"]>resident_phage["MaxCargoSize"]: 
+                        resident_phage["Type"]="Defective"
                                                         
                     #Check if it is an antibiotic resistance gene
-                    if ("AR" in incoming_gene[0]) and (incoming_gene[3]=="Resistant"):self.resistances[incoming_gene[0].split(":")[1]]=True                          
+                    if ("AR" in incoming_gene[0]) and (incoming_gene[3]=="Resistant"):
+                        self.resistances[incoming_gene[0].split(":")[1]]=True                          
                     return True       
         
         #Probability to integrate within the bacterial chromosome
@@ -309,7 +358,8 @@ class Bacteria():
             self.genome[insertion_pos]=self.genome[insertion_pos][0:-1]+(self.genome[insertion_pos][-1]+"_rec",)
         
             #Check if it is an antibiotic resistance gene 
-            if ("AR" in incoming_gene[0]) and (incoming_gene[3]=="Resistant"):self.resistances[incoming_gene[0].split(":")[1]]=True
+            if ("AR" in incoming_gene[0]) and (incoming_gene[3]=="Resistant"):
+                self.resistances[incoming_gene[0].split(":")[1]]=True
             return True
         
         return False
@@ -338,7 +388,8 @@ class Bacteria():
                 return self.IntegratePhageDNA(cargo)#; return False
             
             #Check resistance by CRISPR (existing cassettes)
-            if crispr_sequence in self.phage_resistance_cassettes: return self.IntegratePhageDNA(cargo)
+            if crispr_sequence in self.phage_resistance_cassettes: 
+                return self.IntegratePhageDNA(cargo)
         
             #Check resistance by CRISPR: probability of acquisition of new crispr cassette (automatically fails infection)
             if random.random()<param["Resistance Phage CRISPR Mutation Probability"]: 
@@ -349,7 +400,8 @@ class Bacteria():
             ###If this point is reached, phage will definitely infect###
             
             #Check if there was cargo
-            if cargo==None: cargo=[]
+            if cargo==None: 
+                cargo=[]
                                 
             #Choose location of insertion in genome
             position=random.choice([pos for pos in range(0, len(self.genome))])
@@ -376,7 +428,8 @@ class Bacteria():
                     #print "Lyticized with", surrounding_phage, lysogeny_probability                                      
                     self.phages[-1]["Type"]="Induced_Temperate"
                 
-                else:#It is either defective or temperate going into lysogeny           
+                else:
+                    #It is either defective or temperate going into lysogeny           
                                         
                     #Change genome so that it includes the phage and the genes it carries
                     self.genome.insert(self.phages[-1]["Position"], self.phages[-1])
@@ -387,60 +440,80 @@ class Bacteria():
                             self.resistances[gene[0].split(":")[1]]=True
 
                         #Check if phage resistance comes along, add to resistance profile...
-                        if ("Phage_Res" in gene[0]) and (gene[3]=="Resistant"): self.phage_resistance=True
+                        if ("Phage_Res" in gene[0]) and (gene[3]=="Resistant"): 
+                            self.phage_resistance=True
                                
-                    #TODO:Effects of insertion (KO of gene, machinery, plasmids...)  
+                    #Effects of insertion (KO of gene, machinery, plasmids...)  
             return True #Will take phage out of the environment
-        else: return False   
+        else: 
+            return False   
         
     def InnerPhageLifeCycle(self, force_it=False):#Returns true if host is going to die, false otherwise
                 
-        if len(self.phages)==0: return False #No phage, no cry (no death)
+        if len(self.phages)==0: 
+            return False #No phage, no cry (no death)
         
         #Excision occurs with certain probability.
         for phg in self.phages:
-            if phg["Type"]=="Defective":phg["Time"]+=1; continue #Increase time that phage lived in this genome
+            if phg["Type"]=="Defective":phg["Time"]+=1
+            continue 
+            #Increase time that phage lived in this genome
             
             if phg["Type"]=="Temperate":
-                if random.random()<param["Curing Probability"]:phg["Type"]="Defective"; continue #Calculate probability of being "cured" (i.e, deactivated)
+                if random.random()<param["Curing Probability"]:
+                    phg["Type"]="Defective"
+                    continue #Calculate probability of being "cured" (i.e, deactivated)
                             
                 #Calculate probability of entering the lytic cycle
                 alpha=param["IndividualPhageParameters"]["Induction Alpha"][phg["Family"]];
                 kappa=param["IndividualPhageParameters"]["Induction Kappa"][phg["Family"]] #These parameters control the shape of the induction curve
                                                 
                 #Antibiotic stress does not apply if bacteria is resistant                
-                if not(self.resistances["AR_Rif"]):lysogen_to_lysis_prob_rif=float(1)/(1+alpha*math.exp((-kappa*self.location.rif_conc)))
-                else: lysogen_to_lysis_prob_rif=float(1)/(1+alpha*math.exp((-kappa*0)))
+                if not(self.resistances["AR_Rif"]):
+                    lysogen_to_lysis_prob_rif=float(1)/(1+alpha*math.exp((-kappa*self.location.rif_conc)))
+                else: 
+                    lysogen_to_lysis_prob_rif=float(1)/(1+alpha*math.exp((-kappa*0)))
                                                 
-                if not(self.resistances["AR_Str"]):lysogen_to_lysis_prob_str=float(1)/(1+alpha*math.exp((-kappa*self.location.str_conc)))
-                else: lysogen_to_lysis_prob_str=float(1)/(1+alpha*math.exp((-kappa*0)))
+                if not(self.resistances["AR_Str"]):
+                    lysogen_to_lysis_prob_str=float(1)/(1+alpha*math.exp((-kappa*self.location.str_conc)))
+                else: 
+                    lysogen_to_lysis_prob_str=float(1)/(1+alpha*math.exp((-kappa*0)))
                 
-                if not(self.resistances["AR_Quin"]):lysogen_to_lysis_prob_quin=float(1)/(1+alpha*math.exp((-kappa*self.location.quin_conc)))
-                else: lysogen_to_lysis_prob_quin=float(1)/(1+alpha*math.exp((-kappa*0)))
+                if not(self.resistances["AR_Quin"]):
+                    lysogen_to_lysis_prob_quin=float(1)/(1+alpha*math.exp((-kappa*self.location.quin_conc)))
+                else: 
+                    lysogen_to_lysis_prob_quin=float(1)/(1+alpha*math.exp((-kappa*0)))
                 
                 #The maximum of all 3 antibiotics is taken (NOT CUMULATIVE!)
                 lysogen_to_lysis_prob=max([lysogen_to_lysis_prob_rif, lysogen_to_lysis_prob_str, lysogen_to_lysis_prob_quin])
                 
                 #Draw the dice...                                
-                if random.random()>lysogen_to_lysis_prob:phg["Time"]+=1; continue #Exits anyway without entering the lytic cycle
+                if random.random()>lysogen_to_lysis_prob:
+                    phg["Time"]+=1
+                    continue 
+                    #Exits anyway without entering the lytic cycle
                 else:                                                                            
                     phg["Type"]="Induced_Temperate"
-                    #phg["Time"]=0 #So it does not burst in this same generation TODO: See how to deal with this. If I activate this, when antibiotics are used there is almost no time for bacteria to survive long enough to spread phage 
+                    #phg["Time"]=0 #So it does not burst in this same generation 
+                    # See how to deal with this. If I activate this, when antibiotics are used there is almost no time for bacteria to survive long enough to spread phage 
                     
                     #Check probability of packaging some nearby host genes with the phage DNA
                     
                     spec_transd_prob=param["IndividualPhageParameters"]["Specialized Transduction Probability"][phg["Family"]]
-                    if (random.random()<spec_transd_prob): self.SpecializedTransduction(phg)
+                    if (random.random()<spec_transd_prob): 
+                        self.SpecializedTransduction(phg)
                     
                     #It will now enter the lytic cycle (will not enter here in the next iteration)
             
             #If it gets to here is either lytic or induced temperate, it will behave according to the probability of lysis, which is assumed to be high
-            if (random.random()<param["Abortive Infection Probability"]) and not(force_it): return True #abortive infection
+            if (random.random()<param["Abortive Infection Probability"]) and not(force_it): 
+                return True #abortive infection
                          
             if ((random.random()<param["Burst Probability"]) and (phg["Time"]>0)) or force_it:              
                 self.PhageBurst(phg)
                 return True #Will activate death and generate eDNA
-            else: phg["Time"]+=1#Increase time that phage lived in this genome
+            else: 
+                phg["Time"]+=1#Increase time that phage lived in this genome
                    
         return False #If none of these bad things happens, host lives to fight another day 
     
@@ -456,7 +529,8 @@ class Bacteria():
                 
         if len(gene)>3: #Means it is a resistance gene (ARG or phage resistance)
             phage_new_cargo=(gene[0], gene[1], "Mobile:Ph", gene[3])
-        else: phage_new_cargo=(gene[0], gene[1], "Mobile:Ph")
+        else: 
+            phage_new_cargo=(gene[0], gene[1], "Mobile:Ph")
         
         #print "Transduced, Specialized", self.color, gene, neighbouring_genes
         lytic_phage["Cargo"].append(phage_new_cargo) #Append it to phage cargo
@@ -470,16 +544,18 @@ class Bacteria():
                 gene=random.choice(gene["Cargo"]) #Take a gene at random from the MGE
             if len(gene)>3: #Means it is a resistance gene (ARG or phage resistance)
                 phage_new_cargo.append((gene[0], gene[1], "Mobile:Ph", gene[3]))
-            else:phage_new_cargo.append((gene[0], gene[1], "Mobile:Ph"))
+            else:
+                phage_new_cargo.append((gene[0], gene[1], "Mobile:Ph"))
         return phage_new_cargo
     
     
     def PhageBurst(self, lysed_phage=None):
 
         def CRISPR_Mutation():
-            import string
-            if random.random()<param["Phage CRISPR Mutation Probability"]: return ''.join(random.choice(string.ascii_lowercase) for _ in range(len(lysed_phage["crispr_seq"])))
-            else: return lysed_phage["crispr_seq"]
+            if random.random()<param["Phage CRISPR Mutation Probability"]: 
+                return ''.join(random.choice(string.ascii_lowercase) for _ in range(len(lysed_phage["crispr_seq"])))
+            else: 
+                return lysed_phage["crispr_seq"]
         
         #New in v7.1
         def HostRangeMutation(): #ONLY USE IF THERE IS ONE UNAFFECTED SPECIES
@@ -499,7 +575,8 @@ class Bacteria():
                 
                 for bac in param["InfectionMap"][lysed_phage["Family"]]:
                     if bac==new_host: param["InfectionMap"][new_family][bac]=0.5
-                    else:param["InfectionMap"][new_family][bac]=param["InfectionMap"][lysed_phage["Family"]][bac]
+                    else:
+                        param["InfectionMap"][new_family][bac]=param["InfectionMap"][lysed_phage["Family"]][bac]
                 
                 #Update superinfection table                        
                 for other_phage in param["Superinfection"]:
@@ -521,7 +598,8 @@ class Bacteria():
                         param["Superinfection"][new_family+"_Defective"][other_phage]=param["Superinfection"][lysed_phage["Family"]+"_Defective"][other_phage]
                 return new_family
             
-            else: return lysed_phage["Family"] #Still the same phage as its parent
+            else: 
+                return lysed_phage["Family"] #Still the same phage as its parent
         
         #New in v7.1
         def ReceptorMutation():          
@@ -532,19 +610,21 @@ class Bacteria():
                 new_receptor=random.choice(list(all_possible_receptors - set([lysed_phage["Receptor"]])))
                  
                 return new_receptor
-            else: return lysed_phage["Receptor"]
+            else: 
+                return lysed_phage["Receptor"]
         
         #Recombination with other phages
         if len(self.phages)>1: #If there is more than one phage
             for phg1, phg2 in itertools.combinations(self.phages, 2): #Create all pairwise combinations
                  
-                if random.random()<param["Phage Recombination Probability"]: #TODO: This probability should depend on the phage homology
+                if random.random()<param["Phage Recombination Probability"]: # This probability should depend on the phage homology
                     
                     #Select gene positions to be swapped
                     cargo1_gene_pos=random.choice(range(0, len(phg1["Cargo"]))) 
                     cargo2_gene_pos=random.choice(range(0, len(phg2["Cargo"])))
 
-                    new_crg1=[];new_crg2=[]
+                    new_crg1=[]
+                    new_crg2=[]
                     
                     #Recreate cargo of phage1 with the new gene from phage2 (and without the swapped one)
                     for pos in range(0, len(phg1["Cargo"])):
@@ -555,15 +635,18 @@ class Bacteria():
                         new_crg2.append((phg2["Cargo"][pos] if pos!=cargo2_gene_pos else phg1["Cargo"][cargo1_gene_pos]))
 
                     #Reassign new cargoes
-                    phg1["Cargo"]=new_crg1; phg2["Cargo"]=new_crg2
+                    phg1["Cargo"]=new_crg1
+                    phg2["Cargo"]=new_crg2
         
         
         #If it was induced, reset status to Temperate
-        if lysed_phage["Type"]=="Induced_Temperate":lysed_phage["Type"]="Temperate"
+        if lysed_phage["Type"]=="Induced_Temperate":
+            lysed_phage["Type"]="Temperate"
         
         
         #Check if cargo has reached maximum capacity, due to specialized transduction. Inactivate phage if this is the case
-        if len(lysed_phage["Cargo"])>=lysed_phage["MaxCargoSize"]:lysed_phage["Type"]="Defective"
+        if len(lysed_phage["Cargo"])>=lysed_phage["MaxCargoSize"]:
+            lysed_phage["Type"]="Defective"
         
         
         def MutatePhageGenes(non_mutated_cargo):
@@ -589,15 +672,22 @@ class Bacteria():
                                    phage_type="Defective",
                                    receptor=lysed_phage["Receptor"],
                                    crispr_sequence=lysed_phage["crispr_seq"], 
-                                   maxcargo=lysed_phage["MaxCargoSize"])#TODO: Check if deepcopy is not needed...
+                                   maxcargo=lysed_phage["MaxCargoSize"])
+                                   # Check if deepcopy is not needed...
                 
                 
-            else:#If the phage is intact, there is a probability to mutate its receptor and its CRISPR sequence            
+            else:
+                #If the phage is intact, there is a probability to mutate its receptor and its CRISPR sequence            
                 self.location.AddFreePhage(family=HostRangeMutation(), donor_genome=self, cargo=copy.copy(lysed_phage["Cargo"]),                 
                                    phage_type=lysed_phage["Type"],
                                    receptor=ReceptorMutation(),
                                    crispr_sequence=CRISPR_Mutation(),
-                                   maxcargo=lysed_phage["MaxCargoSize"])#TODO: Check if deepcopy is not needed...
+                                   maxcargo=lysed_phage["MaxCargoSize"])
+                                   # Check if deepcopy is not needed...
                 
 
-            #TODO: If there are memory issues, remove the donor_genome=self, because it will keep around dead bacteria            
+            
+            # If there are memory issues, remove the donor_genome=self, because it will keep around dead bacteria         
+
+
+# This file is fully translated.   
