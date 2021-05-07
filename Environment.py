@@ -130,14 +130,16 @@ class Place():
                 
         deployed_in=[]
         while current_conc>1:
-        # CURRENT PROGRESS FOR TRANSLATION
-            if ant_type=="RIF": current_conc=int(self.rif_conc*math.exp(-lambda_diffusion*distance))
-            if ant_type=="STR": current_conc=int(self.str_conc*math.exp(-lambda_diffusion*distance))
-            if ant_type=="QUIN": current_conc=int(self.quin_conc*math.exp(-lambda_diffusion*distance))
+            if ant_type=="RIF": 
+                current_conc=int(self.rif_conc*math.exp(-lambda_diffusion*distance))
+            if ant_type=="STR": 
+                current_conc=int(self.str_conc*math.exp(-lambda_diffusion*distance))
+            if ant_type=="QUIN": 
+                current_conc=int(self.quin_conc*math.exp(-lambda_diffusion*distance))
             
             locs=self.Get_Reachable(distance, desired_type="Location")
             for l in locs:
-                if not(l in deployed_in):                
+                if not (l in deployed_in):                
                     self.my_world.world[l].AddAntibiotic(ant_type, int(random.choice(range(current_conc/2, current_conc))))                
                     deployed_in.append(l)
 
@@ -146,43 +148,50 @@ class Place():
 
         
     def Erode_Elements(self, current_iteration):
-        
         #Degrade antibiotics                
         if self.rif_conc>0:
             antibiotic_degradation_rate=param["Antibiotic Degradation Lambda RIF"]            
             self.rif_conc=self.rif_inoculum*math.exp(-antibiotic_degradation_rate*self.rif_time)
             self.rif_time+=1
-            if self.rif_conc<pow(10, -5): self.rif_conc=0 #To save some time
+            if self.rif_conc<pow(10, -5): 
+                self.rif_conc=0 
+                # To save some time
             
         if self.str_conc>0:
             antibiotic_degradation_rate=param["Antibiotic Degradation Lambda STR"]            
             self.str_conc=self.str_inoculum*math.exp(-antibiotic_degradation_rate*self.str_time)
             self.str_time+=1
-            if self.str_conc<pow(10, -5): self.str_conc=0 #To save some time
+            if self.str_conc<pow(10, -5): 
+                self.str_conc=0 #To save some time
                         
         if self.quin_conc>0:
             antibiotic_degradation_rate=param["Antibiotic Degradation Lambda QUIN"]            
             self.quin_conc=self.quin_inoculum*math.exp(-antibiotic_degradation_rate*self.quin_time)
             self.quin_time+=1
-            if self.quin_conc<pow(10, -5): self.quin_conc=0 #To save some time
+            if self.quin_conc<pow(10, -5): 
+                self.quin_conc=0 #To save some time
                                         
         
         #Degrade phage
         def CheckPhageSurvival(phage):
             prob_phage_survival=1*math.exp(-param["Free Phage Degradation Lambda"]*(-phage["Time"]))                    
-            if random.random()>prob_phage_survival: return False #Doesn't make it
-            else: return True #Still survives
+            if random.random()>prob_phage_survival: 
+                return False #Doesn't make it
+            else: 
+                return True #Still survives
         
         #Check which phage survive outside
         self.free_phages[:]=[p for p in self.free_phages if CheckPhageSurvival(p[1])]
-        for phage in self.free_phages: phage[1]["Time"]-=1#Then increase counter of surviving phage lifetime outside a host   
+        for phage in self.free_phages: 
+            phage[1]["Time"]-=1
+            #Then increase counter of surviving phage lifetime outside a host   
                     
         #Same for exogenous DNA...        
         if len(self.eDNA)>0:
-            if random.random()>0.5: #TODO: This more efficiently (as a function of "age" of eDNA?)
+            if random.random()>0.5: 
+                # This more efficiently (as a function of "age" of eDNA?)
                 self.eDNA.pop(random.randrange(len(self.eDNA)))
                 
-        
 
 class World():
     def __init__(self, lines, rows):
@@ -201,7 +210,6 @@ class World():
      
     def GetMooreNeighborhood(self, origin, distance):
         adjs=[]
-         
         for i in range(-distance,distance+1,1):
             for j in range(-distance,distance+1,1):
                 if i != 0 or j != 0: #Do not add self as neighbor
@@ -224,26 +232,34 @@ class World():
         self.available_locations.remove(coordinates)
 
         
-    def Get_Free_Space(self):return self.world[random.choice(self.available_locations)]
-    def Get_All_Free_Spaces(self):return self.available_locations
+    def Get_Free_Space(self):
+        return self.world[random.choice(self.available_locations)]
+    def Get_All_Free_Spaces(self):
+        return self.available_locations
 
     def Set_All_Unavailable(self):
         self.available_locations=[]
     
     def Set_Many_Unavailable(self, coordinate_list):         
-        self.available_locations=list(set(self.available_locations)-set(coordinate_list)) #Careful with this. It changes order of list and removes duplicates. Might work for how we manage this list
+        self.available_locations=list(set(self.available_locations)-set(coordinate_list)) 
+        # Careful with this. It changes order of list and removes duplicates. Might work for how we manage this list
         
-    def Set_Many_Available(self, coordinate_list):self.available_locations.extend(coordinate_list)
-    def Set_All_Available(self): self.available_locations=self.world.keys()
+    def Set_Many_Available(self, coordinate_list):
+        self.available_locations.extend(coordinate_list)
+
+    def Set_All_Available(self): 
+        self.available_locations=self.world.keys()
     
     def GetAllFreePhages(self):
         count_all_phages=0;
-        for loc in self.world:count_all_phages+=len(self.world[loc].free_phages)               
+        for loc in self.world:
+            count_all_phages+=len(self.world[loc].free_phages)               
         return count_all_phages
     
     def UpdateLocations(self, current_iteration=None):
         #Degrade elements (eDNA, antibiotics...)
-        for _, loc in enumerate(self.world): self.world[loc].Erode_Elements(current_iteration)
+        for _, loc in enumerate(self.world): 
+            self.world[loc].Erode_Elements(current_iteration)
         
         #Shuffle according to environmental Structure
         if param["Environmental Diffusion"]=="Liquid":   
@@ -251,32 +267,38 @@ class World():
             #Redistribute antibiotic randomly across locations
             all_rifs=[self.world[loc].rif_conc for loc in self.world]#Gather all individual concentrations in array
             random_positions=random.sample(self.world.keys(), len(self.world.keys()))#Randomize locations            
-            for loc in random_positions:self.world[loc].rif_conc=all_rifs.pop()#Assign new antibiotic values
-            
+            for loc in random_positions:
+                self.world[loc].rif_conc=all_rifs.pop()#Assign new antibiotic values
             
             #PHAGE SHUFFLING - randomize each viral particle
             all_phages=[] #Remove all phages from positions and collect all in a single list
-            for loc in self.world:all_phages.extend(copy.copy(self.world[loc].free_phages));self.world[loc].free_phages=[]
+            for loc in self.world:
+                all_phages.extend(copy.copy(self.world[loc].free_phages));self.world[loc].free_phages=[]
                         
             factor_chunk=int(round(float(len(all_phages))/(self.max_height*self.max_width)))#This is how many phages each location is going to "receive"
     
     
-            if factor_chunk>=1:#When there are too many phages, divide evenly (faster)                                    
+            if factor_chunk>=1:
+                # When there are too many phages, divide evenly (faster)                                    
                 random.shuffle(all_phages)
                 chunks=[all_phages[x:x+factor_chunk] for x in range(0, len(all_phages), factor_chunk)]
                 
                 for loc in random_positions:
-                    if len(chunks)<=0:break
-                    else:self.world[loc].free_phages=chunks.pop()
+                    if len(chunks)<=0:
+                        break
+                    else:
+                        self.world[loc].free_phages=chunks.pop()
                     
                 while len(chunks)>0: #If there are remainders, distribute randomly                                                        
                     random_pos=random.choice(random_positions)                    
                     self.world[random_pos].free_phages.extend(chunks.pop())
 
     
-            else:#If not enough phages, distribute at random by the locations                
+            else:
+                #If not enough phages, distribute at random by the locations                
                 for loc in random_positions:
-                    if len(all_phages)<=0: break
+                    if len(all_phages)<=0: 
+                        break
                     self.world[loc].free_phages.append(all_phages.pop())                                 
             
             
@@ -307,3 +329,5 @@ class World():
             for loc in self.world:
                 self.world[loc].rif_conc=new_values[loc]["rif"]             
                 self.world[loc].free_phages=copy.copy(new_values[loc]["phage"])#TODO: Check if deepcopy is needed
+
+# This file has been translated
