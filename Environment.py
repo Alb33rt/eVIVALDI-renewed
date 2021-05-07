@@ -1,58 +1,73 @@
-import random, math
+import random, math, copy, itertools
 from Parameters import model_parameters as param
-import copy
 
 class Place():
     def __init__(self, position, world):
-        self.my_world=world
+        self.my_world = world
 
-        self.coordinates=position
-        self.occupants=[]
+        self.coordinates = position
+        self.occupants = []
         
-        self.neighbours={}
+        self.neighbours = {}
         
         #(block, original_genome)
         #block is ARG or "trash"
-        self.eDNA=[] #Holds DNA of dead cells (more than one block of DNA). Is degraded at a rate. 
-        self.free_phages=[]
+        self.eDNA = [] #Holds DNA of dead cells (more than one block of DNA). Is degraded at a rate. 
+        self.free_phages = []
         
-        self.rif_conc=0; self.rif_time=0; self.rif_inoculum=0
-        self.str_conc=0; self.str_time=0; self.str_inoculum=0
-        self.quin_conc=0; self.quin_time=0; self.quin_inoculum=0
+        self.rif_conc=0
+        self.rif_time=0 
+        self.rif_inoculum=0
+
+        self.str_conc=0
+        self.str_time=0
+        self.str_inoculum=0
+        self.quin_conc=0
+        self.quin_time=0
+        self.quin_inoculum=0
         
-    def Add_Available(self):self.my_world.Set_Available(self.coordinates)
-    def Add_Unavailable(self): self.my_world.Set_Unavailable(self.coordinates)
+    def Add_Available(self):
+        self.my_world.Set_Available(self.coordinates)
     
+    def Add_Unavailable(self):
+        self.my_world.Set_Unavailable(self.coordinates)
     
     def Get_Distance_To(self, other_location):
-        return max(abs(self.coordinates[0]-other_location[0]), abs(self.coordinates[1]-other_location[1]))
+        return max(abs(self.coordinates[0]-other_location[0]), abs(self.coordinates[1]- other_location[1]))
   
         
     def Get_Reachable(self, distance, desired_type="Location"):
-        import itertools
-        
-        new_ds=[]
-        
+        new_ds = []
 
         for dimension in self.coordinates:
-            new_d=[dimension+d for d in range(-distance, distance+1)]
-            new_new_d=[]
+            new_d = [dimension + d for d in range(-distance, distance + 1)]
+            new_new_d = []
             for d in new_d: 
                 if param["World Type"]=="Toroidal":
-                    if d<0: new_new_d.append(self.my_world.max_height-int(math.fabs(d))); continue
-                    if d>=self.my_world.max_height: new_new_d.append(d-self.my_world.max_height); continue
+                    if d<0: 
+                        new_new_d.append(self.my_world.max_height-int(math.fabs(d)))
+                        continue
+                    if d>=self.my_world.max_height: 
+                        new_new_d.append(d-self.my_world.max_height)
+                        continue
                 new_new_d.append(d)
             new_ds.append(new_new_d)
 
         full_locations=list(itertools.product(*new_ds))
         
         possible_locations=[]
+        
         for pos in full_locations:
-            if (pos[0]==self.coordinates[0]) and (pos[1]==self.coordinates[1]): continue #skip if it is my own coordinates
-            if (pos[0]<0) or (pos[0]>=self.my_world.max_height) or (pos[1]<0) or (pos[1]>=self.my_world.max_width): continue #skip if it is out of boundaries
+            if (pos[0]==self.coordinates[0]) and (pos[1]==self.coordinates[1]): 
+                continue 
+            #skip if it is my own coordinates
+            if (pos[0]<0) or (pos[0]>=self.my_world.max_height) or (pos[1]<0) or (pos[1]>=self.my_world.max_width): 
+                continue 
+            #skip if it is out of boundaries
             possible_locations.append(pos)
     
-        if desired_type=="Location": return possible_locations
+        if desired_type=="Location": 
+            return possible_locations
         if desired_type=="LocationObj":
             return [self.my_world.world[loc] for loc in possible_locations]
         if desired_type=="Bacteria":
@@ -65,16 +80,23 @@ class Place():
             print("NO SPACE FOR MORE PHAGE")
             exit()
             return 
-        self.free_phages.append((donor_genome, {"Family":family, "Position":None, "Cargo": cargo, "Time":0, 
-                                "Type":phage_type,
-                                "Receptor":receptor,
-                                "crispr_seq": crispr_sequence,
-                                "MaxCargoSize": maxcargo}))
+        self.free_phages.append((donor_genome, {
+            "Family":family, 
+            "Position":None, 
+            "Cargo": cargo, 
+            "Time":0, 
+            "Type":phage_type,
+            "Receptor":receptor,
+            "crispr_seq": crispr_sequence,
+            "MaxCargoSize": maxcargo,
+            }))
         
     def GetNumberOfNearbyPhage(self):
         n_phage=0
-        for l in self.Get_Reachable(1, desired_type="Location"): n_phage+=len(self.my_world.world[l].free_phages)
-        n_phage+=len(self.free_phages)#Add also phage in the current location
+        for l in self.Get_Reachable(1, desired_type="Location"): 
+            n_phage+=len(self.my_world.world[l].free_phages)
+        n_phage+=len(self.free_phages)
+        #Add also phage in the current location
         return n_phage
     
     def AddAntibiotic(self, ant_type, quantity):
@@ -97,15 +119,18 @@ class Place():
 
         lambda_diffusion=0.17
         
-        if ant_type=="RIF": current_conc=self.rif_conc
-        if ant_type=="STR": current_conc=self.str_conc
-        if ant_type=="QUIN": current_conc=self.quin_conc
+        if ant_type=="RIF": 
+            current_conc=self.rif_conc
+        if ant_type=="STR": 
+            current_conc=self.str_conc
+        if ant_type=="QUIN": 
+            current_conc=self.quin_conc
         
         distance=1
                 
         deployed_in=[]
         while current_conc>1:
-            
+        # CURRENT PROGRESS FOR TRANSLATION
             if ant_type=="RIF": current_conc=int(self.rif_conc*math.exp(-lambda_diffusion*distance))
             if ant_type=="STR": current_conc=int(self.str_conc*math.exp(-lambda_diffusion*distance))
             if ant_type=="QUIN": current_conc=int(self.quin_conc*math.exp(-lambda_diffusion*distance))
