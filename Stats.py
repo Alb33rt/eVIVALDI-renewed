@@ -271,3 +271,5 @@ def GetExtraStats(bacteria_list, world):
         for phg in world.world[loc].free_phages: extra_stats_log_stats["Phage With Receptor"][phg[1]["Receptor"]]+=1
 
     return extra_stats_log_stats
+
+# this file has been completely translated
