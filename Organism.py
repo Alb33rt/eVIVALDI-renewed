@@ -53,7 +53,7 @@ class Bacteria():
         ant_concentration+=(0 if self.resistances["AR_Str"] else self.location.str_conc)
         ant_concentration+=(0 if self.resistances["AR_Quin"] else self.location.quin_conc)
         
-        death_rate_modifiers+=a+((1-a)/(1+math.exp(-b*(ant_concentration-m))))
+        death_rate_modifiers+=a+((1-a)/(1+math.exp(b*(ant_concentration-m))))
         
         #Upon phage excision, death is certain        
         if self.InnerPhageLifeCycle(): 
@@ -465,7 +465,7 @@ class Bacteria():
                     continue #Calculate probability of being "cured" (i.e, deactivated)
                             
                 #Calculate probability of entering the lytic cycle
-                alpha=param["IndividualPhageParameters"]["Induction Alpha"][phg["Family"]];
+                alpha=param["IndividualPhageParameters"]["Induction Alpha"][phg["Family"]]
                 kappa=param["IndividualPhageParameters"]["Induction Kappa"][phg["Family"]] #These parameters control the shape of the induction curve
                                                 
                 #Antibiotic stress does not apply if bacteria is resistant                
@@ -653,7 +653,7 @@ class Bacteria():
             
             def mutate_string(gene_string):
                 mutated_pos=random.choice(range(len(gene_string)))
-                return gene_string[:mutated_pos] + random.choice(string.letters).upper() + gene_string[mutated_pos+1:]                
+                return gene_string[:mutated_pos] + random.choice(string.ascii_letters).upper() + gene_string[mutated_pos+1:]                
             if random.random()<0.5:                
                 mutated_pos=random.choice(range(len(non_mutated_cargo)))                
                 non_mutated_cargo[mutated_pos]=(mutate_string(non_mutated_cargo[mutated_pos][0]),)+non_mutated_cargo[mutated_pos][1:]                       

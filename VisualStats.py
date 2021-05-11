@@ -63,10 +63,10 @@ def LaunchPlot():
     max_bacteria=(param["World Size"]*param["World Size"])*1.5
     max_phage=(param["World Size"]*param["World Size"]*param["Phage Carrying Capacity"])*1.5
     
-    bacteria_zone.set_yscale('log');bacteria_zone.set_ylim(pow(10, 0), 1.1*max_bacteria); bacteria_zone.set_xlim(-param["Iterations Outgrowth"], param["Iterations"])    
-    phage_zone.set_yscale('log');phage_zone.set_ylim(pow(10, 0), 1.1*max_phage); phage_zone.set_xlim(-param["Iterations Outgrowth"], param["Iterations"])
-    sub_species_bacteria_zone.set_yscale('log');sub_species_bacteria_zone.set_ylim(pow(10, 0), 1.1*max_bacteria); sub_species_bacteria_zone.set_xlim(-param["Iterations Outgrowth"], param["Iterations"])
-    phage_receptors_zone.set_yscale('log');phage_receptors_zone.set_ylim(pow(10, 0), 1.1*max_phage); phage_receptors_zone.set_xlim(-param["Iterations Outgrowth"], param["Iterations"])
+    bacteria_zone.set_yscale('log');bacteria_zone.set_ylim(pow(10, 0), 1.1*max_bacteria); bacteria_zone.set_xlim(param["Iterations Outgrowth"], param["Iterations"])    
+    phage_zone.set_yscale('log');phage_zone.set_ylim(pow(10, 0), 1.1*max_phage); phage_zone.set_xlim(param["Iterations Outgrowth"], param["Iterations"])
+    sub_species_bacteria_zone.set_yscale('log');sub_species_bacteria_zone.set_ylim(pow(10, 0), 1.1*max_bacteria); sub_species_bacteria_zone.set_xlim(param["Iterations Outgrowth"], param["Iterations"])
+    phage_receptors_zone.set_yscale('log');phage_receptors_zone.set_ylim(pow(10, 0), 1.1*max_phage); phage_receptors_zone.set_xlim(param["Iterations Outgrowth"], param["Iterations"])
     
     img=mpimg.imread("Empties/EmptyWorld200.bmp")
     img_genomes=mpimg.imread("Empties/EmptyWorld200.bmp")
@@ -156,7 +156,7 @@ def UpdateStats(iteration, simulation, all_stats, extra_stats, print_plots=False
         all_receptors_phage[index].set_ydata(np.append(all_receptors_phage[index].get_ydata(), extra_stats["Phage With Receptor"][index]))
     
     #Spatial zone update    
-    if iteration>-param["Iterations Outgrowth"]:        
+    if iteration>param["Iterations Outgrowth"]:        
         img=mpimg.imread(param["Main Directory"]+"Joined/Generation"+str(iteration).zfill(3)+".bmp")
         img_artist.set_data(img)
     
