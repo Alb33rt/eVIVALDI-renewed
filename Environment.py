@@ -251,7 +251,7 @@ class World():
         self.available_locations=self.world.keys()
     
     def GetAllFreePhages(self):
-        count_all_phages=0;
+        count_all_phages=0
         for loc in self.world:
             count_all_phages+=len(self.world[loc].free_phages)               
         return count_all_phages
@@ -313,7 +313,7 @@ class World():
             for loc in self.world:
                 
                 partner_loc=random.choice(self.world[loc].Get_Reachable(distance=distance_to_use, desired_type="LocationObj"))                
-                new_values[loc]["rif"]=partner_loc.rif_conc;
+                new_values[loc]["rif"]=partner_loc.rif_conc
                 new_values[partner_loc.coordinates]["rif"]=self.world[loc].rif_conc
 
 
