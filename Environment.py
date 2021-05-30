@@ -151,7 +151,7 @@ class Place():
         #Degrade antibiotics                
         if self.rif_conc>0:
             antibiotic_degradation_rate=param["Antibiotic Degradation Lambda RIF"]            
-            self.rif_conc=self.rif_inoculum*math.exp(-antibiotic_degradation_rate*self.rif_time)
+            self.rif_conc=self.rif_inoculum*math.exp(antibiotic_degradation_rate*self.rif_time)
             self.rif_time+=1
             if self.rif_conc<pow(10, -5): 
                 self.rif_conc=0 
@@ -159,14 +159,14 @@ class Place():
             
         if self.str_conc>0:
             antibiotic_degradation_rate=param["Antibiotic Degradation Lambda STR"]            
-            self.str_conc=self.str_inoculum*math.exp(-antibiotic_degradation_rate*self.str_time)
+            self.str_conc=self.str_inoculum*math.exp(antibiotic_degradation_rate*self.str_time)
             self.str_time+=1
             if self.str_conc<pow(10, -5): 
                 self.str_conc=0 #To save some time
                         
         if self.quin_conc>0:
             antibiotic_degradation_rate=param["Antibiotic Degradation Lambda QUIN"]            
-            self.quin_conc=self.quin_inoculum*math.exp(-antibiotic_degradation_rate*self.quin_time)
+            self.quin_conc=self.quin_inoculum*math.exp(antibiotic_degradation_rate*self.quin_time)
             self.quin_time+=1
             if self.quin_conc<pow(10, -5): 
                 self.quin_conc=0 #To save some time
@@ -174,7 +174,7 @@ class Place():
         
         #Degrade phage
         def CheckPhageSurvival(phage):
-            prob_phage_survival=1*math.exp(-param["Free Phage Degradation Lambda"]*(-phage["Time"]))                    
+            prob_phage_survival=1*math.exp(param["Free Phage Degradation Lambda"]*(-phage["Time"]))                    
             if random.random()>prob_phage_survival: 
                 return False #Doesn't make it
             else: 
@@ -213,7 +213,7 @@ class World():
         for i in range(-distance,distance+1,1):
             for j in range(-distance,distance+1,1):
                 if i != 0 or j != 0: #Do not add self as neighbor
-                    if self.world.has_key((origin[0]+i, origin[1]+j)):
+                    if self.world in (origin[0]+i, origin[1]+j):
                         adjs.append((origin[0]+i, origin[1]+j))
         return adjs
     
@@ -251,7 +251,7 @@ class World():
         self.available_locations=self.world.keys()
     
     def GetAllFreePhages(self):
-        count_all_phages=0;
+        count_all_phages=0
         for loc in self.world:
             count_all_phages+=len(self.world[loc].free_phages)               
         return count_all_phages
@@ -313,7 +313,7 @@ class World():
             for loc in self.world:
                 
                 partner_loc=random.choice(self.world[loc].Get_Reachable(distance=distance_to_use, desired_type="LocationObj"))                
-                new_values[loc]["rif"]=partner_loc.rif_conc;
+                new_values[loc]["rif"]=partner_loc.rif_conc
                 new_values[partner_loc.coordinates]["rif"]=self.world[loc].rif_conc
 
 
@@ -329,6 +329,7 @@ class World():
             for loc in self.world:
                 self.world[loc].rif_conc=new_values[loc]["rif"]             
                 self.world[loc].free_ph
-                ages=copy.copy(new_values[loc]["phage"])#TODO: Check if deepcopy is needed
+                ages = copy.copy(new_values[loc]["phage"])#TODO: Check if deepcopy is needed
+                print(ages) #just to debug can remove if not needed
 
 # This file has been translated
